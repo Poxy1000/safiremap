@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Map Project</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- Your custom CSS -->
+    <link rel="stylesheet" href="map.css">
+    <style>#map { height: 500px; }</style>
+    <style>
+        /* Custom styles for buttons */
+        .btn-custom {
+            border-radius: 20px; /* Adjust the border-radius for rounded edges */
+            background-color: pink; /* Set the background color to pink */
+            color: white; /* Set the text color to white */
+            padding: 10px 20px; /* Add padding to separate buttons */
+            margin-bottom: 10px; /* Add margin at the bottom of each button */
+        }
+
+        /* Custom styles for the header */
+        .header-container {
+            background-color: #f8f9fa; /* Set the background color to a light gray */
+            padding: 10px; /* Adjust padding to make the container thinner */
+            margin-bottom: 20px; /* Add margin at the bottom of the container */
+            border-bottom: 2px solid #e9ecef; /* Add a border at the bottom */
+        }
+
+        .company-logo {
+            max-width: 100px; /* Set max width for the logo */
+            margin-right: 20px; /* Add margin to separate logo from text */
+        }
+
+        .company-name {
+            font-size: 24px; /* Increase font size for the company name */
+            font-weight: bold; /* Make the company name bold */
+            margin-bottom: 5px; /* Add margin at the bottom of the company name */
+        }
+
+        .where-we-work {
+            font-size: 16px; /* Decrease font size for the additional text */
+            color: #6c757d; /* Set color for the additional text */
+        }
+
+        /* Custom styles for the footer */
+        .footer-container {
+            background-color: black; /* Set the background color to black */
+            color: white; /* Set the text color to white */
+            padding: 20px; /* Add padding to the container */
+            margin-top: 20px; /* Add margin at the top of the container */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <!-- Header Section -->
+        <header class="header-container">
+            <div class="row">
+                <div class="col d-flex align-items-center">
+                    <img src="C:\Users\pakakmani\mapsafire\img\Safire LOGO.jpg" alt="Company Logo" class="img-fluid company-logo">
+                    <div>
+                        <h3 class="company-name"><a href="https://safire.org.zw/" target="_blank" style="text-decoration: none; color: inherit;">SOUTHERN ALLIANCE FOR INDIGENOUS RESOURCES (SAFIRE)</a></h3>
+                        <p class="where-we-work">WHERE WE WORK</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Left Sidebar with Layer Buttons -->
+                <div class="sidebar">
+                    <h2>Project Title</h2>
+
+                    <!-- Layer Buttons -->
+                    <div class="btn-group-vertical">
+                        <button type="button" class="btn btn-custom" onclick="loadLayer('LED-RESLEMS')">LED-RESLEMS</button>
+                        <button type="button" class="btn btn-custom" onclick="loadLayer('OXFAM-CARL')">OXFAM-CARL</button>
+                        <button type="button" class="btn btn-custom" onclick="loadLayer('Terramatch')">Terramatch</button>
+                        <button type="button" class="btn btn-custom" onclick="loadLayer('BMZ-TDH')">BMZ-TDH</button>
+                        <button type="button" class="btn btn-custom" onclick="loadLayer('BRICS')">BRICS</button>
+                    </div>
+                    <p>Click a layer to add to the map.</p>
+                    <button class="btn btn-success" onclick="refreshMap()">Refresh Map</button>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <!-- Map Container -->
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <div class="footer-container">
+        <p>Address: 49 Eastcourt Rd, Belvedere, Harare, Zimbabwe</p>
+        <p>Author: phakamani@safire.co.zw</p>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Your custom JS -->
+    <script>
+        var map = L.map('map').setView([-17.825020383138707, 31.006038075174985], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var currentLayer = null;
+
+        var layers = {
+            'LED-RESLEMS': 'https://raw.githubusercontent.com/Poxy1000/myshapefiles/main/led.geojson',
+            'OXFAM-CARL': 'https://raw.githubusercontent.com/Poxy1000/myshapefiles/main/Buhera.geojson',
+            'Terramatch': 'https://raw.githubusercontent.com/Poxy1000/myshapefiles/main/Mutasa.geojson',
+            'BMZ-TDH': 'https://raw.githubusercontent.com/Poxy1000/myshapefiles/main/Bmz.geojson',
+            'BRICS': 'https://raw.githubusercontent.com/Poxy1000/myshapefiles/main/Brics.geojson',
+        };
+
+        // Coordinates for HQ
+        var hqCoordinates = [-17.825020383138707, 31.006038075174985];
+
+        // Create a marker at HQ location
+        var hqMarker = L.marker(hqCoordinates).addTo(map);
+
+        function loadLayer(layerName) {
+            var layerUrl = layers[layerName];
+
+            if (layerUrl) {
+                // Remove the current layer
+                if (currentLayer) {
+                    map.removeLayer(currentLayer);
+                }
+
+                // Using fetch to load GeoJSON
+                fetch(layerUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        currentLayer = L.geoJSON(data, {
+                            onEachFeature: function (feature, layer) {
+                                layer.on({
+                                    mouseover: function (e) {
+                                        var popupContent = ""; // Empty popup initially
+
+                                        // Display additional attributes in popup
+                                        for (var prop in feature.properties) {
+                                            // Exclude the 'name' attribute
+                                            if (prop !== 'name') {
+                                                popupContent += "<p>" + prop + ": " + feature.properties[prop] + "</p>";
+                                            }
+                                        }
+
+                                        layer.bindPopup(popupContent).openPopup();
+                                    },
+                                    mouseout: function (e) {
+                                        layer.closePopup();
+                                    }
+                                });
+                            }
+                        }).addTo(map);
+
+                        // Fit the map to the bounds of the layer
+                        map.fitBounds(currentLayer.getBounds());
+                    })
+                    .catch(error => {
+                        console.error("Failed to load GeoJSON for", layerName, ":", error);
+                    });
+            }
+        }
+
+        function refreshMap() {
+            // Remove the current layer
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+                currentLayer = null;
+            }
+
+            // Refresh the base layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Set the map view to the default position when refreshing
+            map.setView([-17.825020383138707, 31.006038075174985], 15);
+        }
+    </script>
+</body>
+
+</html>
